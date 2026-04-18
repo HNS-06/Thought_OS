@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-background: #F5F5F7;
+  --color-primary: #2563EB;
+  --color-primary-dim: #1D4ED8;
+  --color-secondary: #FFD60A;
+  --color-secondary-container: #FFD60A;
+  --color-tertiary: #111111;
+  --color-tertiary-dim: #666666;
+  --color-surface: #FFFFFF;
+  --color-surface-container-low: #FAFAFA;
+  --color-surface-container-high: #F0F0F0;
+  --color-surface-container-highest: #E5E7EB;
+  --color-on-surface: #111111;
+  --color-on-surface-variant: #666666;
+  --color-outline: #000000;
+  --color-outline-variant: #EEEEEE;
+  --color-error: #DC2626;
+
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-scan: scan 4s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body selection:bg-primary/30 overflow-hidden transition-colors duration-300;
+    cursor: default;
+  }
+  
+  .dark {
+    --color-background: #111111;
+    --color-surface: #1C1C1C;
+    --color-surface-container-low: #242424;
+    --color-surface-container-high: #2E2E2E;
+    --color-surface-container-highest: #383838;
+    --color-on-surface: #FFFFFF;
+    --color-on-surface-variant: #A0A0A0;
+    --color-outline: #444444;
+    --color-outline-variant: #222222;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white border border-outline rounded-xl shadow-[4px_4px_0px_0px_var(--color-outline)];
+  }
+  
+  .nebula-glow {
+    @apply shadow-[4px_4px_0px_0px_var(--color-outline)];
+  }
+
+  .ai-orb-glow {
+    @apply shadow-[0_0_20px_rgba(37,99,235,0.2)];
+  }
+}

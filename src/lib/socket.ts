@@ -1,0 +1,7 @@
+import { io } from 'socket.io-client';
+
+const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3005';
+
+export const socket = io(URL as string, {
+  autoConnect: true
+});
