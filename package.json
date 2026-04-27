@@ -18,7 +18,7 @@
     "productName": "Thought Canvas",
     "copyright": "Copyright © 2026",
     "directories": {
-      "output": "release"
+      "output": "release_final"
     },
     "files": [
       "dist/**/*",

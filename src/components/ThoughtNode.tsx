@@ -68,12 +68,12 @@ function useNodeDrag(
     const rect = containerRef.current.getBoundingClientRect();
     const xPx = e.clientX - rect.left - dragStartOffset.current.x;
     const yPx = e.clientY - rect.top - dragStartOffset.current.y;
-    const clampedX = Math.max(0, Math.min(95, (xPx / rect.width) * 100));
-    const clampedY = Math.max(0, Math.min(90, (yPx / rect.height) * 100));
-    onNodeMove?.(node.id, clampedX, clampedY);
+    const newX = (xPx / rect.width) * 100;
+    const newY = (yPx / rect.height) * 100;
+    onNodeMove?.(node.id, newX, newY);
     const now = Date.now();
     if (now - lastEmitTime.current > 50) {
-      socket.emit('node_drag', { id: node.id, x: clampedX, y: clampedY });
+      socket.emit('node_drag', { id: node.id, x: newX, y: newY });
       lastEmitTime.current = now;
     }
   }, [node.id, containerRef, onNodeMove]);

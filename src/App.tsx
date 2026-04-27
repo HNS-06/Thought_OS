@@ -926,6 +926,19 @@ export default function App() {
                     onPointerUp={handleCanvasPointerUp}
                     onWheel={handleWheel}
                   >
+                    {/* Interactive Grid Background */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none" 
+                      style={{
+                         backgroundSize: `${40 * scale}px ${40 * scale}px`,
+                         backgroundImage: `
+                           linear-gradient(to right, var(--color-outline-variant) 1px, transparent 1px),
+                           linear-gradient(to bottom, var(--color-outline-variant) 1px, transparent 1px)
+                         `,
+                         backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
+                         opacity: 0.5
+                      }}
+                    />
                     <motion.div
                       ref={canvasRef}
                       className="min-w-[1200px] min-h-[800px] relative h-full will-change-transform"
