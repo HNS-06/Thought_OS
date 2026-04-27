@@ -707,71 +707,75 @@ export default function App() {
     URL.revokeObjectURL(url);
   }, [nodes, anchorConnections, projects]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleImportData = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const data = JSON.parse(ev.target?.result as string);
-          
-          let targetProjectId = activeProjectId;
-          
-          if (data.projects && Array.isArray(data.projects)) {
-            setProjects(data.projects);
-            if (data.projects.length > 0) {
-              targetProjectId = data.projects[0].id;
-              handleSwitchProject(targetProjectId);
-            }
-          }
+    fileInputRef.current?.click();
+  }, []);
 
-          if (data.nodes && Array.isArray(data.nodes)) {
-            const validNodes = data.nodes.map((n: any, idx: number) => {
-              if (!n || typeof n !== 'object') return null;
-              
-              const id = n.id || `imported-node-${Date.now()}-${idx}`;
-              const x = typeof n.x === 'number' ? n.x : (n.position?.x || 50 + Math.random() * 20);
-              const y = typeof n.y === 'number' ? n.y : (n.position?.y || 50 + Math.random() * 20);
-              const title = n.title || n.label || n.data?.label || n.data?.content || 'Untitled Node';
-              const type = ['concept', 'sphere', 'image', 'cluster'].includes(n.type) ? n.type : 'concept';
-              
-              const nodeProjectId = (data.projects && n.projectId) ? n.projectId : targetProjectId;
-
-              return {
-                ...n,
-                id,
-                x,
-                y,
-                title,
-                type,
-                projectId: nodeProjectId
-              };
-            }).filter(Boolean);
-            
-            if (validNodes.length > 0) {
-              setNodes(validNodes as ThoughtNode[]);
-            } else {
-              console.warn("Import contained no valid nodes.");
-            }
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        
+        let targetProjectId = activeProjectId;
+        
+        if (data.projects && Array.isArray(data.projects)) {
+          setProjects(data.projects);
+          if (data.projects.length > 0) {
+            targetProjectId = data.projects[0].id;
+            handleSwitchProject(targetProjectId);
           }
-          
-          if (data.anchorConnections && Array.isArray(data.anchorConnections)) {
-            setAnchorConnections(data.anchorConnections);
-          }
-          
-          alert('Map data loaded successfully!');
-        } catch (err) {
-          console.error("Failed to parse map data", err);
-          alert('Failed to parse map data.');
         }
-      };
-      reader.readAsText(file);
+
+        if (data.nodes && Array.isArray(data.nodes)) {
+          const validNodes = data.nodes.map((n: any, idx: number) => {
+            if (!n || typeof n !== 'object') return null;
+            
+            const id = n.id || `imported-node-${Date.now()}-${idx}`;
+            const x = typeof n.x === 'number' ? n.x : (n.position?.x || 50 + Math.random() * 20);
+            const y = typeof n.y === 'number' ? n.y : (n.position?.y || 50 + Math.random() * 20);
+            const title = n.title || n.label || n.data?.label || n.data?.content || 'Untitled Node';
+            const type = ['concept', 'sphere', 'image', 'cluster'].includes(n.type) ? n.type : 'concept';
+            
+            const nodeProjectId = (data.projects && n.projectId) ? n.projectId : targetProjectId;
+
+            return {
+              ...n,
+              id,
+              x,
+              y,
+              title,
+              type,
+              projectId: nodeProjectId
+            };
+          }).filter(Boolean);
+          
+          if (validNodes.length > 0) {
+            setNodes(validNodes as ThoughtNode[]);
+          } else {
+            console.warn("Import contained no valid nodes.");
+          }
+        }
+        
+        if (data.anchorConnections && Array.isArray(data.anchorConnections)) {
+          setAnchorConnections(data.anchorConnections);
+        }
+        
+        alert('Map data loaded successfully!');
+      } catch (err) {
+        console.error("Failed to parse map data", err);
+        alert('Failed to parse map data.');
+      }
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     };
-    input.click();
+    reader.readAsText(file);
   }, [activeProjectId, handleSwitchProject]);
 
   const handleShareData = useCallback(() => {
@@ -1254,6 +1258,15 @@ export default function App() {
 
       {/* Ambient grain */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
+      
+      {/* Hidden File Input for Data Import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="application/json"
+        style={{ display: 'none' }}
+      />
     </div>
   );
 }
