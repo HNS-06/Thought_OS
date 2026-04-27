@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Settings, Network, Activity, Archive, History, HelpCircle, Menu, X, Plus, Trash2, ChevronRight, BarChart2, LayoutDashboard, FolderKanban } from 'lucide-react';
+import { Search, Settings, Network, Activity, Archive, History, HelpCircle, Menu, X, Plus, Trash2, ChevronLeft, ChevronRight, BarChart2, LayoutDashboard, FolderKanban, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Project, ThoughtNode } from '@/src/types';
@@ -9,6 +9,7 @@ export type SideNavView = 'nodes' | 'connections' | 'archives' | 'history';
 
 interface NavProps {
   isSidebarOpen?: boolean;
+  isConnected?: boolean;
   onToggleSidebar?: () => void;
   projects?: Project[];
   activeProjectId?: string;
@@ -26,13 +27,15 @@ interface NavProps {
 
 // ── TopNav ────────────────────────────────────────────────────────────────────
 export function TopNav({
+  isSidebarOpen,
+  isConnected = false,
   onToggleSidebar,
   topView = 'dashboard',
   onTopViewChange,
   nodeCount = 0,
   activeProjectId = 'default',
   projects = [],
-}: Pick<NavProps, 'onToggleSidebar' | 'topView' | 'onTopViewChange' | 'nodeCount' | 'activeProjectId' | 'projects'>) {
+}: Pick<NavProps, 'isSidebarOpen' | 'isConnected' | 'onToggleSidebar' | 'topView' | 'onTopViewChange' | 'nodeCount' | 'activeProjectId' | 'projects'>) {
 
   const activeProject = projects.find(p => p.id === activeProjectId);
   const completePercent = Math.min(100, nodeCount * 5);
@@ -42,9 +45,10 @@ export function TopNav({
       <div className="flex items-center gap-4 md:gap-10">
         <button
           onClick={onToggleSidebar}
-          className="p-2 border border-outline rounded-lg md:hidden hover:bg-surface-container-low transition-colors"
+          className="flex items-center justify-center w-10 h-10 bg-surface border-2 border-outline rounded-xl hover:bg-primary hover:text-white transition-all shadow-[2px_2px_0px_0px_var(--color-outline)] active:translate-y-0.5 active:shadow-none"
+          title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
         >
-          <Menu className="w-5 h-5" />
+          {isSidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
         </button>
         <h1 className="text-lg md:text-xl font-extrabold tracking-tighter text-on-surface uppercase font-headline">Thought.OS</h1>
 
@@ -73,10 +77,18 @@ export function TopNav({
 
       {/* Right — Status + Neural Load + search */}
       <div className="flex items-center gap-3 md:gap-4">
-        {/* Status: Nominal pill */}
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-background border border-outline rounded-full shadow-[2px_2px_0px_0px_var(--color-outline)] whitespace-nowrap">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse border border-outline" />
-          <span className="text-[9px] font-black text-on-surface uppercase tracking-widest">Status: Nominal</span>
+        {/* Status: Connected/Offline pill */}
+        <div className={cn(
+          "hidden lg:flex items-center gap-2 px-3 py-1.5 bg-background border border-outline rounded-full shadow-[2px_2px_0px_0px_var(--color-outline)] whitespace-nowrap",
+          isConnected ? "border-primary" : "border-on-surface-variant/30"
+        )}>
+          <div className={cn(
+            "w-2 h-2 rounded-full border border-black",
+            isConnected ? "bg-primary animate-pulse" : "bg-on-surface-variant/40"
+          )} />
+          <span className="text-[9px] font-black text-on-surface uppercase tracking-widest">
+            {isConnected ? "Connected" : "Offline Mode"}
+          </span>
         </div>
 
         {/* Neural Load mini bar */}
@@ -171,14 +183,18 @@ export function SideNav({
       </AnimatePresence>
 
       <aside className={cn(
-        "fixed left-0 top-0 h-full z-[60] w-72 bg-surface border-r border-outline pt-[64px] md:pt-[72px] flex flex-col pb-6 transition-all duration-300 ease-in-out md:translate-x-0",
+        "fixed left-0 top-0 h-full z-[60] w-72 bg-surface border-r border-outline pt-[64px] md:pt-[72px] flex flex-col pb-6 transition-all duration-300 ease-in-out",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        {/* Mobile close */}
-        <div className="flex justify-between items-center md:hidden px-6 pt-4 pb-2">
-          <h2 className="text-sm font-black uppercase text-on-surface">Menu</h2>
-          <button onClick={onToggleSidebar} className="p-2 border border-outline rounded-lg">
-            <X className="w-5 h-5" />
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 pt-5 pb-3 border-b border-outline md:border-none">
+          <h2 className="text-[10px] font-black uppercase text-on-surface-variant tracking-[3px]">Navigation</h2>
+          <button 
+            onClick={onToggleSidebar} 
+            className="p-1.5 border border-outline rounded-lg hover:bg-primary hover:text-white transition-all"
+            title="Collapse"
+          >
+            <ChevronLeft className="w-4 h-4" />
           </button>
         </div>
 

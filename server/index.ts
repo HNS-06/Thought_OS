@@ -28,12 +28,7 @@ const DEFAULT_PROJECT = {
   emoji: '🧠',
 };
 
-const INITIAL_NODES = [
-  { id: 'node-1', type: 'concept', title: 'Quantum Entanglement', description: 'Exploring the boundaries between local realism and particle interconnectivity in multi-dimensional space.', tags: ['physics', 'research'], x: 35, y: 35, featured: true, status: 'active', isComplete: false, projectId: 'default' },
-  { id: 'node-2', type: 'sphere',  title: 'Neural Synapse Mapping', x: 60, y: 15, status: 'active', isComplete: false, projectId: 'default' },
-  { id: 'node-3', type: 'image',   title: 'Structural Synthesis', description: 'Visualizing the hierarchical data structures within the neural matrix.', imageUrl: 'https://picsum.photos/seed/neural/800/600', tags: ['visual', 'data'], x: 58, y: 58, isComplete: false, projectId: 'default' },
-  { id: 'node-4', type: 'concept', title: 'Sustainable Urban Mobility', description: 'Synthesizing multimodal transport networks with decentralized energy grids to reduce carbon footprint by 40%.', tags: ['infrastructure', 'iot'], x: 15, y: 60, status: 'latent', isComplete: false, projectId: 'default' },
-];
+const INITIAL_NODES: any[] = [];
 
 // ── DB Bootstrap ──────────────────────────────────────────────────────────────
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -119,14 +114,6 @@ io.on('connection', async (socket) => {
     let description = data.description || '';
     let tags: string[] = [];
 
-    if (!imageUrl) {
-      try {
-        const insights = await extractInsights(title);
-        tags = insights.tags;
-        description = insights.description || description;
-      } catch (_) { /* no AI key – silently skip */ }
-    }
-
     const type = imageUrl ? 'image' : 'concept';
 
     const newNode = new NodeModel({
@@ -143,19 +130,19 @@ io.on('connection', async (socket) => {
       projectId,
     });
 
+    // Save and emit immediately so the user sees it instantly
     await newNode.save();
     io.emit('node_created', newNode);
 
+    // Process AI insights and connections asynchronously
     if (!imageUrl) {
-      const connections = await findSimilarNodesAndConnect(newNode);
-      if (connections.length > 0) {
-        const updatedNode = await NodeModel.findOne({ id: newNode.id });
-        io.emit('node_updated', updatedNode);
-        for (const conn of connections) {
-          const targetNode = await NodeModel.findOne({ id: conn.targetId });
-          io.emit('node_updated', targetNode);
-        }
-      }
+      try {
+        const insights = await extractInsights(title);
+        newNode.tags = insights.tags;
+        newNode.description = insights.description || description;
+        await newNode.save();
+        io.emit('node_updated', newNode);
+      } catch (_) { /* silently skip on AI failure */ }
     }
   });
 
@@ -177,6 +164,14 @@ io.on('connection', async (socket) => {
     }
   });
 
+  socket.on('node_disconnect', async ({ sourceId, targetId }) => {
+    await NodeModel.updateOne(
+      { id: sourceId },
+      { $pull: { connections: { targetId } } }
+    );
+    io.emit('node_updated', await NodeModel.findOne({ id: sourceId }));
+  });
+
   socket.on('node_update', async ({ id, updates }) => {
     await NodeModel.updateOne({ id }, { $set: updates });
     const updatedNode = await NodeModel.findOne({ id });
@@ -185,6 +180,11 @@ io.on('connection', async (socket) => {
 
   socket.on('node_delete', async (id: string) => {
     await NodeModel.deleteOne({ id });
+    // Clean up any connections pointing to or from this node
+    await NodeModel.updateMany(
+      { 'connections.targetId': id },
+      { $pull: { connections: { targetId: id } } }
+    );
     io.emit('node_deleted', id);
   });
 

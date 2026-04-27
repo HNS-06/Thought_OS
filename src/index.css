@@ -27,6 +27,11 @@
   --animate-float: float 6s ease-in-out infinite;
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 @layer base {
   body {
     @apply bg-background text-on-surface font-body selection:bg-primary/30 overflow-hidden transition-colors duration-300;
@@ -57,5 +62,15 @@
 
   .ai-orb-glow {
     @apply shadow-[0_0_20px_rgba(37,99,235,0.2)];
+  }
+
+  .connection-hit-area:hover + .connection-line {
+    stroke: var(--color-error);
+    stroke-width: 3;
+    opacity: 0.8;
+  }
+
+  .connection-hit-area:hover {
+    cursor: pointer;
   }
 }

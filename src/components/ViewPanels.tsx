@@ -122,6 +122,7 @@ export function ProjectsPanel({
   onSwitchProject,
   onCreateProject,
   onDeleteProject,
+  onDeleteHistory,
 }: {
   projects: Project[];
   nodes: ThoughtNode[];
@@ -129,6 +130,7 @@ export function ProjectsPanel({
   onSwitchProject: (id: string) => void;
   onCreateProject: (name: string, emoji?: string) => void;
   onDeleteProject: (id: string) => void;
+  onDeleteHistory: () => void;
 }) {
   const [name, setName]   = React.useState('');
   const [emoji, setEmoji] = React.useState('📁');
@@ -141,9 +143,17 @@ export function ProjectsPanel({
 
   return (
     <div className="w-full h-full overflow-y-auto p-6 md:p-10 space-y-8">
-      <div className="flex items-center gap-3 mb-2">
-        <FolderKanban className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-black uppercase tracking-tight text-on-surface">Projects</h2>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <FolderKanban className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-black uppercase tracking-tight text-on-surface">Projects</h2>
+        </div>
+        <button
+          onClick={onDeleteHistory}
+          className="px-3 py-1 bg-error/10 text-error border border-error/30 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-error hover:text-white transition-all shadow-[2px_2px_0px_0px_var(--color-outline)]"
+        >
+          Clear All Projects
+        </button>
       </div>
 
       {/* Create form */}
@@ -225,13 +235,15 @@ export function ProjectsPanel({
 }
 
 // ── Connections Panel ─────────────────────────────────────────────────────────
-export function ConnectionsPanel({ nodes }: { nodes: ThoughtNode[] }) {
+export function ConnectionsPanel({ nodes, anchorConnections }: { nodes: ThoughtNode[], anchorConnections: any[] }) {
   const connectedPairs: { from: ThoughtNode; to: ThoughtNode }[] = [];
-  nodes.forEach(n => {
-    n.connections?.forEach(c => {
-      const target = nodes.find(x => x.id === c.targetId);
-      if (target) connectedPairs.push({ from: n, to: target });
-    });
+  
+  anchorConnections.forEach(conn => {
+    const sourceNode = nodes.find(n => n.id === conn.fromNodeId);
+    const targetNode = nodes.find(n => n.id === conn.toNodeId);
+    if (sourceNode && targetNode) {
+      connectedPairs.push({ from: sourceNode, to: targetNode });
+    }
   });
 
   return (
@@ -246,7 +258,7 @@ export function ConnectionsPanel({ nodes }: { nodes: ThoughtNode[] }) {
         <div className="flex flex-col items-center justify-center h-64 gap-4 text-on-surface-variant">
           <GitBranch className="w-12 h-12 opacity-20" />
           <p className="text-sm font-black uppercase">No connections yet</p>
-          <p className="text-xs text-center max-w-xs opacity-60">Create nodes and the AI will automatically find semantic connections between them.</p>
+          <p className="text-xs text-center max-w-xs opacity-60">Establish links between nodes to map your thought process manually.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -351,7 +363,7 @@ export function ArchivesPanel({
 }
 
 // ── History Panel ─────────────────────────────────────────────────────────────
-export function HistoryPanel({ nodes }: { nodes: ThoughtNode[] }) {
+export function HistoryPanel({ nodes, onDeleteHistory }: { nodes: ThoughtNode[]; onDeleteHistory: () => void }) {
   // Sort by most recent first (use id timestamp as proxy since nodes have `node-{Date.now()}` ids)
   const sorted = [...nodes].sort((a, b) => {
     const tsA = parseInt(a.id.replace('node-', '')) || 0;
@@ -361,9 +373,17 @@ export function HistoryPanel({ nodes }: { nodes: ThoughtNode[] }) {
 
   return (
     <div className="w-full h-full overflow-y-auto p-6 md:p-10">
-      <div className="flex items-center gap-3 mb-6">
-        <Clock className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-black uppercase tracking-tight text-on-surface">History</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Clock className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-black uppercase tracking-tight text-on-surface">History</h2>
+        </div>
+        <button
+          onClick={onDeleteHistory}
+          className="px-3 py-1 bg-error/10 text-error border border-error/30 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-error hover:text-white transition-all shadow-[2px_2px_0px_0px_var(--color-outline)]"
+        >
+          Clear History
+        </button>
       </div>
 
       {sorted.length === 0 ? (

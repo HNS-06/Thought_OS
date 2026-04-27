@@ -1,10 +1,16 @@
-import { Brain, Mic, Plus, Minus, Search, Maximize2, Share2, Target, Hand, MousePointer2 } from 'lucide-react';
+import { Brain, Mic, Plus, Minus, Search, Maximize2, Share2, Target, Hand, MousePointer2, PanelLeftOpen, Save, FolderOpen } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { useState, useRef, useEffect } from 'react';
 import { socket } from '../lib/socket';
 
 // ── ThoughtInput ──────────────────────────────────────────────────────────────
-export function ThoughtInput({ activeProjectId = 'default' }: { activeProjectId?: string }) {
+export function ThoughtInput({ 
+  activeProjectId = 'default',
+  onAddNode 
+}: { 
+  activeProjectId?: string;
+  onAddNode?: (title: string) => void;
+}) {
   const [text, setText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -36,12 +42,16 @@ export function ThoughtInput({ activeProjectId = 'default' }: { activeProjectId?
 
   const handleSync = () => {
     if (!text.trim()) return;
-    socket.emit('node_create', {
-      title: text.trim(),
-      x: 30 + Math.random() * 40,
-      y: 20 + Math.random() * 40,
-      projectId: activeProjectId,
-    });
+    if (onAddNode) {
+      onAddNode(text.trim());
+    } else {
+      socket.emit('node_create', {
+        title: text.trim(),
+        x: 30 + Math.random() * 40,
+        y: 20 + Math.random() * 40,
+        projectId: activeProjectId,
+      });
+    }
     setText('');
   };
 
@@ -124,10 +134,20 @@ export function InteractionPalette({
   onResetZoom,
   isPanMode,
   onTogglePan,
+  onToggleSidebar,
+  onAddNode,
+  onExportData,
+  onImportData,
+  onShareData,
 }: {
   onResetZoom?: () => void;
   isPanMode?: boolean;
   onTogglePan?: () => void;
+  onToggleSidebar?: () => void;
+  onAddNode?: () => void;
+  onExportData?: () => void;
+  onImportData?: () => void;
+  onShareData?: () => void;
 }) {
   const handleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -138,12 +158,7 @@ export function InteractionPalette({
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({ title: 'Thought.OS', url: window.location.href });
-    } else {
-      await navigator.clipboard.writeText(window.location.href);
-      // brief toast — just use alert for now
-    }
+    onShareData?.();
   };
 
   return (
@@ -151,6 +166,20 @@ export function InteractionPalette({
       "fixed z-[100] flex gap-3 md:gap-4 transition-all duration-300",
       "bottom-28 left-4 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:right-6 md:flex-col md:left-auto"
     )}>
+      <button
+        onClick={onToggleSidebar}
+        title="Toggle Sidebar"
+        className="w-10 h-10 md:w-12 md:h-12 bg-surface border-2 border-outline rounded-xl flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all shadow-[4px_4px_0px_0px_var(--color-outline)]"
+      >
+        <PanelLeftOpen className="w-5 md:w-6 h-5 md:h-6" />
+      </button>
+      <button
+        onClick={onAddNode}
+        title="Add Node"
+        className="w-10 h-10 md:w-12 md:h-12 bg-on-surface text-surface border-2 border-outline rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-[4px_4px_0px_0px_var(--color-outline)] active:translate-y-0.5"
+      >
+        <Plus className="w-5 md:w-6 h-5 md:h-6" />
+      </button>
       <button
         onClick={onTogglePan}
         title={isPanMode ? "Switch to select mode" : "Switch to pan mode"}
@@ -170,7 +199,22 @@ export function InteractionPalette({
         <Maximize2 className="w-4 md:w-5 h-4 md:h-5" />
       </button>
       <button
+        onClick={onImportData}
+        title="Open File"
+        className="w-10 h-10 md:w-12 md:h-12 bg-surface border border-outline rounded-xl flex items-center justify-center text-on-surface hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[4px_4px_0px_0px_var(--color-outline)]"
+      >
+        <FolderOpen className="w-4 md:w-5 h-4 md:h-5" />
+      </button>
+      <button
+        onClick={onExportData}
+        title="Save File"
+        className="w-10 h-10 md:w-12 md:h-12 bg-surface border border-outline rounded-xl flex items-center justify-center text-on-surface hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[4px_4px_0px_0px_var(--color-outline)]"
+      >
+        <Save className="w-4 md:w-5 h-4 md:h-5" />
+      </button>
+      <button
         onClick={handleShare}
+        title="Share Data"
         className="w-10 h-10 md:w-12 md:h-12 bg-surface border border-outline rounded-xl flex items-center justify-center text-on-surface hover:bg-primary hover:text-white hover:border-primary transition-all shadow-[4px_4px_0px_0px_var(--color-outline)]"
       >
         <Share2 className="w-4 md:w-5 h-4 md:h-5" />
