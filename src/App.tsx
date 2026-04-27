@@ -723,7 +723,7 @@ export default function App() {
         
         let targetProjectId = activeProjectId;
         
-        if (data.projects && Array.isArray(data.projects)) {
+        if (data && typeof data === 'object' && !Array.isArray(data) && data.projects && Array.isArray(data.projects)) {
           setProjects(data.projects);
           if (data.projects.length > 0) {
             targetProjectId = data.projects[0].id;
@@ -731,16 +731,20 @@ export default function App() {
           }
         }
 
-        if (data.nodes && Array.isArray(data.nodes)) {
-          const validNodes = data.nodes.map((n: any, idx: number) => {
+        const rawNodes = Array.isArray(data) ? data : (data.nodes || data.elements || []);
+        
+        if (Array.isArray(rawNodes) && rawNodes.length > 0) {
+          const validNodes = rawNodes.map((n: any, idx: number) => {
             if (!n || typeof n !== 'object') return null;
             
             const id = n.id || `imported-node-${Date.now()}-${idx}`;
+            // Handle various coordinate formats (x/y, position.x/position.y)
             const x = typeof n.x === 'number' ? n.x : (n.position?.x || 50 + Math.random() * 20);
             const y = typeof n.y === 'number' ? n.y : (n.position?.y || 50 + Math.random() * 20);
             const title = n.title || n.label || n.data?.label || n.data?.content || 'Untitled Node';
             const type = ['concept', 'sphere', 'image', 'cluster'].includes(n.type) ? n.type : 'concept';
             
+            // Ensure the node is mapped to the current workspace context
             const nodeProjectId = (data.projects && n.projectId) ? n.projectId : targetProjectId;
 
             return {
@@ -761,8 +765,11 @@ export default function App() {
           }
         }
         
-        if (data.anchorConnections && Array.isArray(data.anchorConnections)) {
-          setAnchorConnections(data.anchorConnections);
+        const rawConns = Array.isArray(data) ? [] : (data.anchorConnections || data.edges || []);
+        if (Array.isArray(rawConns) && rawConns.length > 0) {
+          setAnchorConnections(rawConns);
+        } else if (Array.isArray(data)) {
+          setAnchorConnections([]);
         }
         
         alert('Map data loaded successfully!');
